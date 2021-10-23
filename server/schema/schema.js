@@ -1,6 +1,6 @@
-const graphql = require("graphql");
-const Movie = require("../models/movie");
-const Director = require("../models/director");
+const graphql = require('graphql');
+const Movie = require('../models/movie');
+const Director = require('../models/director');
 
 const {
   GraphQLObjectType,
@@ -9,10 +9,11 @@ const {
   GraphQLSchema,
   GraphQLInt,
   GraphQLList,
+  GraphQLNonNull,
 } = graphql;
 
 const MovieType = new GraphQLObjectType({
-  name: "Movie",
+  name: 'Movie',
   fields: () => ({
     id: { type: GraphQLID },
     name: { type: GraphQLString },
@@ -27,7 +28,7 @@ const MovieType = new GraphQLObjectType({
 });
 
 const DirectorType = new GraphQLObjectType({
-  name: "Director",
+  name: 'Director',
   fields: () => ({
     id: { type: GraphQLID },
     name: { type: GraphQLString },
@@ -42,7 +43,7 @@ const DirectorType = new GraphQLObjectType({
 });
 
 const RootQuery = new GraphQLObjectType({
-  name: "RootQueryType",
+  name: 'RootQueryType',
   fields: () => ({
     movie: {
       type: MovieType,
@@ -65,7 +66,8 @@ const RootQuery = new GraphQLObjectType({
         return Movie.find({});
       },
     },
-    directors: { //一覧取得
+    directors: {
+      //一覧取得
       type: new GraphQLList(DirectorType),
       resolve(parent, args) {
         return Director.find({});
@@ -75,7 +77,7 @@ const RootQuery = new GraphQLObjectType({
 });
 
 const Mutation = new GraphQLObjectType({
-  name: "Mutation",
+  name: 'Mutation',
   fields: {
     addMovie: {
       type: MovieType,
@@ -107,6 +109,58 @@ const Mutation = new GraphQLObjectType({
         });
 
         return director.save();
+      },
+    },
+    updateDirector: {
+      type: DirectorType,
+      args: {
+        id: { type: GraphQLNonNull(GraphQLID) },
+        name: { type: GraphQLString },
+        age: { type: GraphQLInt },
+      },
+      resolve(parent, args) {
+        let updateDirector = {};
+        args.name && (updateDirector.name = args.name);
+        args.age && (updateDirector.age = args.age);
+        return Director.findByIdAndUpdate(args.id, updateDirector, {
+          new: true,
+        });
+      },
+    },
+    updateMovie: {
+      type: MovieType,
+      args: {
+        id: { type: GraphQLNonNull(GraphQLID) },
+        name: { type: GraphQLString },
+        genre: { type: GraphQLString },
+        directorId: { type: GraphQLInt },
+      },
+      resolve(parent, args) {
+        let updateMovie = {};
+        args.name && (updateMovie.name = args.name);
+        args.genre && (updateMovie.genre = args.genre);
+        args.directorId && (updateMovie.directorId = args.directorId);
+        return Movie.findByIdAndUpdate(args.id, updateMovie, {
+          new: true,
+        });
+      },
+    },
+    deleteMovie: {
+      type: MovieType,
+      args: {
+        id: { type: GraphQLNonNull(GraphQLID) },
+      },
+      resolve(parent, args) {
+        return Movie.findByIdAndRemove(args.id);
+      },
+    },
+    deleteDirector: {
+      type: DirectorType,
+      args: {
+        id: { type: GraphQLNonNull(GraphQLID) },
+      },
+      resolve(paretn, args) {
+        return Director.findByIdAndRemove(args.id);
       },
     },
   },
